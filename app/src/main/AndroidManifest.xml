@@ -28,7 +28,8 @@
             </intent-filter>
 
             // открываем ссылки ВК
-            /*<intent-filter>
+            // пока не обрабатываем
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.BROWSABLE" />
@@ -38,7 +39,7 @@
                     android:host="vk.com"
                     android:pathPrefix="/audio"
                     android:scheme="https" />
-            </intent-filter>*/
+            </intent-filter>
 
             // открываем ссылки Яндекса
             <intent-filter>
