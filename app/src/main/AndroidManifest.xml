@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.test">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
+
+            // интент на отправку ссылок через нас
+            // научиться доставать из него инфу
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -24,46 +27,69 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <intent-filter>
+            // открываем ссылки ВК
+            /*<intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="https"
+
+                <data
                     android:host="vk.com"
-                    android:pathPrefix="/audio"/>
-            </intent-filter>
+                    android:pathPrefix="/audio"
+                    android:scheme="https" />
+            </intent-filter>*/
 
+            // открываем ссылки Яндекса
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="https"
-                    android:host="music.yandex.ru" />
+
+                <data
+                    android:host="music.yandex.ru"
+                    android:scheme="https" />
             </intent-filter>
 
+            // открываем ссылки Эпл
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="https"
-                    android:host="music.apple.com" />
+
+                <data
+                    android:host="music.apple.com"
+                    android:scheme="https" />
             </intent-filter>
 
+
+            // открываем ссылки Дизера
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="http"
-                    android:host="www.deezer.com" />
+
+                <data
+                    android:host="www.deezer.com"
+                    android:scheme="http" />
             </intent-filter>
 
+            //открываем ссылки ютуба
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="https"
-                    android:host="youtu.be" />
+
+                <data
+                    android:host="youtu.be"
+                    android:scheme="https" />
             </intent-filter>
+
+            // добавить гугл, щазам
 
         </activity>
     </application>
