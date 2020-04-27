@@ -209,7 +209,22 @@ public class MainActivity extends AppCompatActivity {
     // Функция: получаем исполнителя + название с помощью соответсвующих методов
     void makeArtist(Document html, String url) {
         if (url.contains("yandex.ru/album")) Track = ArtistFromYandex(html);
-        else if (url.contains("deezer")) Track = ArtistFromDeezer(html);
+        else if (url.contains("deezer")) {
+            if (!url.contains("https")) {
+                url = "https://www.deezer.com/ru/track/" + url.substring(url.length()-9);
+                html = null;
+                DownloadTask downloadTask = new DownloadTask();
+                try {
+                    html = downloadTask.execute(url).get();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                makeArtist(html, url);
+            }
+                Track = ArtistFromDeezer(html);
+        }
         else if (url.contains("apple")) Track = ArtistFromApple(html);
         else if (url.contains("yandex.ru/search")) Track = ArtistFromYSearch(html);
     }
@@ -492,6 +507,7 @@ class DownloadTask extends AsyncTask<String, Void, Document> {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        Log.w("Parse", String.valueOf(html));
         return html;
     }
 }
