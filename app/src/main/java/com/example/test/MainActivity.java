@@ -44,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
     // переменная выбора, по умолчанию - 4, затем подгружается из памяти для каждого след открытия
     Integer i = 4;
 
-    String newURL = null;
     String[] Track;
 
     // загрузка сохраненного выбора в локальный файл
@@ -114,20 +113,9 @@ public class MainActivity extends AppCompatActivity {
                 url1 = m.group().substring(0,(m.group().length()-3));
             }
 
-            // парсим
-            Document html = null;
-            DownloadTask downloadTask = new DownloadTask();
-            try {
-                // спарсить
-                html = downloadTask.execute(url1).get();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
             // получить данные о треке и генерируем новый юрл
-            makeArtist(html, url1);
+            makeArtist(url1);
+            String newURL = null;
             if (i == 3)  newURL = MakeYandexUrl(Track);
             if (i == 2)  newURL = MakeYoutubeUrl(Track);
             if (i == 1)  newURL = MakeVkUrl(Track);
@@ -187,68 +175,55 @@ public class MainActivity extends AppCompatActivity {
         // если мы открыли по ссылке
         // вылетает при открытии ВК
         else {
-            Document html = null;
-            DownloadTask downloadTask = new DownloadTask();
-            try {
-                // спарсить
-                html = downloadTask.execute(url).get();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
             // получить данные о треке
-            makeArtist(html, url);
+            makeArtist(url);
             // выполнить новую ссылку
             useUrl();
         }
     }
     // конец onCreate
 
-    // Функция: получаем исполнителя + название с помощью соответсвующих методов
-    void makeArtist(Document html, String url) {
-        if (url.contains("yandex.ru/album")) Track = ArtistFromYandex(html);
-        else if (url.contains("deezer")) {
-            if (!url.contains("https")) {
-                url = "https://www.deezer.com/ru/track/" + url.substring(url.length()-9);
-                html = null;
-                DownloadTask downloadTask = new DownloadTask();
-                try {
-                    html = downloadTask.execute(url).get();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                makeArtist(html, url);
-            }
-                Track = ArtistFromDeezer(html);
+    Document Parse (String url) {
+        Document html = null;
+        DownloadTask downloadTask = new DownloadTask();
+        try {
+            // спарсить
+            html = downloadTask.execute(url).get();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        else if (url.contains("apple")) Track = ArtistFromApple(html);
-        else if (url.contains("yandex.ru/search")) Track = ArtistFromYSearch(html);
+        return html;
+    }
+    // Функция: получаем исполнителя + название с помощью соответсвующих методов
+    void makeArtist(String url) {
+        Document html = null;
+        if (url.contains("yandex.ru/album")) {
+            html = Parse(url);
+            Track = ArtistFromYandex(html);
+        }
+        else if (url.contains("deezer")) {
+            if (!url.contains("https")) url = "https://www.deezer.com/ru/track/" + url.substring(url.length()-9);
+            html = Parse(url);
+            Track = ArtistFromDeezer(html);
+        }
+        else if (url.contains("apple")) {
+            html = Parse(url);
+            Track = ArtistFromApple(html);
+        }
+        else if (url.contains("yandex.ru/search")) {
+            html = Parse(url);
+            Track = ArtistFromYSearch(html);
+        }
     }
 
     // Функция: открываем новый url способом по умолчанию
     void useUrl() {
-        if (i == 3) {// Яндекс
-            newURL = MakeYandexUrl(Track);
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(newURL));
-            startActivity(browserIntent);
-            this.finish();
-        }
-        if (i == 2) { //Ютуб
-            newURL = MakeYoutubeUrl(Track);
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(newURL));
-            startActivity(browserIntent);
-            this.finish();
-        }
-        if (i == 1) { //ВК
-            newURL = MakeVkUrl(Track);
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(newURL));
-            startActivity(browserIntent);
-            this.finish();
-        }
+        String newURL = null;
+        if (i == 3)  newURL = MakeYandexUrl(Track);
+        if (i == 2) newURL = MakeYoutubeUrl(Track);
+        if (i == 1)  newURL = MakeVkUrl(Track);
         if (i == 4) { //Предложить выбор
             // Сделано через ебучий показ другого активити, где просто нет кнопки с выбором...
             // Нужно просто было установить Visible = gone
@@ -260,12 +235,15 @@ public class MainActivity extends AppCompatActivity {
             ytI = (ImageButton) ll.findViewById(R.id.yt);
             yaI = (ImageButton) ll.findViewById(R.id.ya);
         }
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(newURL));
+        startActivity(browserIntent);
+        this.finish();
     }
 
     // если при выборе мы
     //ткнули ВК
     public void vkClick(View view) {
-        newURL = MakeVkUrl(Track);
+        String newURL = MakeVkUrl(Track);
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(newURL));
         startActivity(browserIntent);
         this.finish();
@@ -273,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
 
     //ткнули ютуб
     public void ytClick(View view) {
-        newURL = MakeYoutubeUrl(Track);
+        String newURL = MakeYoutubeUrl(Track);
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(newURL));
         startActivity(browserIntent);
         this.finish();
@@ -281,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
 
     //ткнули Яндекс
     public void yaClick(View view) {
-        newURL = MakeYandexUrl(Track);
+        String newURL = MakeYandexUrl(Track);
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(newURL));
         startActivity(browserIntent);
         this.finish();
@@ -465,17 +443,9 @@ public class MainActivity extends AppCompatActivity {
 
             // формируем поисковую ссылку
             String newURL = "https://music.yandex.ru/search?text=" + ArtistOut + "%20-%20" + songNameOut;
-            Document html = null;
-            DownloadTask downloadTask = new DownloadTask();
-            try {
-                html = downloadTask.execute(newURL).get();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
 
             // парсим ID трека
+            Document html = Parse(newURL);
             String str = html.getElementsByAttribute("href").toString();
             int pos = str.indexOf("/album/");
             String Output = "";
