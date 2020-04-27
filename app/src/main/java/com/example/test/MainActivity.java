@@ -1,14 +1,16 @@
 package com.example.test;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -22,6 +24,8 @@ import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.example.test.R.id.shareVK;
 
@@ -85,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
         load();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,12 +103,42 @@ public class MainActivity extends AppCompatActivity {
         final Intent intent = getIntent();
         String url = intent.getDataString();
 
-        //тесты чего-то там
-        /*setContentView(R.layout.activity_main);
-        TextView share = findViewById(shareVK);
-        share.setVisibility(View.VISIBLE);
-        share.setText("Shared");*/
+        // открываем для передачи ссылки
+        if (intent.getClipData()!=null) {
+            // получаем URL из ссылки регуляркой
+            String str = String.valueOf(intent.getClipData());
+            Pattern p = Pattern.compile("http.*");
+            Matcher m = p.matcher(str);
+            String url1 = "";
+            while(m.find()){
+                url1 = m.group().substring(0,(m.group().length()-3));
+            }
 
+            // парсим
+            Document html = null;
+            DownloadTask downloadTask = new DownloadTask();
+            try {
+                // спарсить
+                html = downloadTask.execute(url1).get();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // получить данные о треке и генерируем новый юрл
+            makeArtist(html, url1);
+            if (i == 3)  newURL = MakeYandexUrl(Track);
+            if (i == 2)  newURL = MakeYoutubeUrl(Track);
+            if (i == 1)  newURL = MakeVkUrl(Track);
+
+            Intent intent2 = new Intent();
+            intent2.setAction(Intent.ACTION_SEND);
+            intent2.setType("text/plain");
+            intent2.putExtra(Intent.EXTRA_TEXT, newURL);
+            startActivity(Intent.createChooser(intent2, "Share"));
+            this.finish();
+        }
         // если мы открываем само приложение, а не при получении URL
         if (url == null) {
             setContentView(R.layout.activity_main);
@@ -149,7 +184,6 @@ public class MainActivity extends AppCompatActivity {
             // устанавливаем выбор в соотвествии с загруженным
             setButtonState();
         }
-
         // если мы открыли по ссылке
         // вылетает при открытии ВК
         else {
