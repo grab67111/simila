@@ -17,7 +17,6 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
-import android.widget.TextView;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -103,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         String url = intent.getDataString();
 
         // открываем для передачи ссылки
-        if (intent.getClipData()!=null) {
+        if (intent.getClipData()!=null && url==null) {
             // получаем URL из ссылки регуляркой
             String str = String.valueOf(intent.getClipData());
             Pattern p = Pattern.compile("http.*");
@@ -123,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
             Intent intent2 = new Intent();
             intent2.setAction(Intent.ACTION_SEND);
             intent2.setType("text/plain");
-            intent2.putExtra(Intent.EXTRA_TEXT, newURL);
+            intent2.putExtra(Intent.EXTRA_TEXT, newURL+" сгенерировано с помощью Simila");
             startActivity(Intent.createChooser(intent2, "Share"));
             this.finish();
         }
@@ -194,8 +193,10 @@ public class MainActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        Log.w("Parse", String.valueOf(html));
         return html;
     }
+
     // Функция: получаем исполнителя + название с помощью соответсвующих методов
     void makeArtist(String url) {
         Document html = null;
@@ -204,9 +205,13 @@ public class MainActivity extends AppCompatActivity {
             Track = ArtistFromYandex(html);
         }
         else if (url.contains("deezer")) {
-            if (!url.contains("https")) url = "https://www.deezer.com/ru/track/" + url.substring(url.length()-9);
-            html = Parse(url);
-            Track = ArtistFromDeezer(html);
+            if (url.contains("search")) Track = ArtistFromDeezerSearch(url);
+            else {
+                if (!url.contains("https"))
+                    url = "https://www.deezer.com/ru/track/" + url.substring(url.length() - 9);
+                html = Parse(url);
+                Track = ArtistFromDeezer(html);
+            }
         }
         else if (url.contains("apple")) {
             html = Parse(url);
@@ -215,6 +220,10 @@ public class MainActivity extends AppCompatActivity {
         else if (url.contains("yandex.ru/search")) {
             html = Parse(url);
             Track = ArtistFromYSearch(html);
+        }
+        else if (url.contains("vk.com")) {
+            html = Parse(url);
+            Track = ArtistFromVK(html);
         }
     }
 
@@ -290,6 +299,7 @@ public class MainActivity extends AppCompatActivity {
     // получить из Дизера
     public String[] ArtistFromDeezer(Document html) {
         char[] data = html.text().toCharArray();
+
         String songName = "";
         String Artist = "";
         int i = 0;
@@ -303,6 +313,23 @@ public class MainActivity extends AppCompatActivity {
             i++;
         }
         String[] Output = new String[2];
+        Output[0] = Artist;
+        Output[1] = songName;
+        return Output;
+    }
+
+    // получить из поиска Дизера
+    public String[] ArtistFromDeezerSearch(String url) {
+        String[] Output = new String[2];
+        String songName = "";
+        String Artist = "";
+
+        url = url.replaceAll("%20"," ");
+        url = url.replace("https://www.deezer.com/search/","");
+        url = url.replace("/track","");
+        Artist = url.split("-",2)[0];
+        songName = url.split("-",2)[1];
+
         Output[0] = Artist;
         Output[1] = songName;
         return Output;
@@ -369,15 +396,37 @@ public class MainActivity extends AppCompatActivity {
 
     //не работает, непонятно откуда получить данные
     public String[] ArtistFromVK(Document html) {
-        TextView text = findViewById(shareVK);
-        text.setText(html.text());
-
         String[] Output = new String[2];
         Output[0] = null;
         Output[1] = null;
         return Output;
     }
 
+    // создание ссылки Дизера
+    // доделать
+    public String MakeDeezerUrl(String[] Input) {
+        char[] songName = Input[1].toCharArray();
+        char[] Artist = Input[0].toCharArray();
+        String ArtistOut = "";
+        String songNameOut = "";
+
+        for (int i = 0; i < songName.length; i++) {
+            if (songName[i] != ' ') songNameOut += songName[i];
+            else songNameOut += "%20";
+        }
+
+        for (int i = 0; i < Artist.length; i++) {
+            if (Artist[i] != ' ') ArtistOut += Artist[i];
+            else ArtistOut += "%20";
+        }
+
+        String newURL = "https://www.deezer.com/search/" + ArtistOut + "%20-%20" + songNameOut + "/track";
+
+        // нужен второй парсинг
+        Document html = Parse(newURL);
+
+        return newURL;
+    }
 
     // создание ссылки в ВК
     public String MakeVkUrl(String[] Input) {
@@ -397,6 +446,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String newURL = "https://vk.com/audio?q=" + ArtistOut + "%20-%20" + songNameOut;
+
         return newURL;
     }
 
@@ -477,7 +527,6 @@ class DownloadTask extends AsyncTask<String, Void, Document> {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Log.w("Parse", String.valueOf(html));
         return html;
     }
 }
