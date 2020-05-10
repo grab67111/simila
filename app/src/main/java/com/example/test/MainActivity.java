@@ -50,6 +50,20 @@ public class MainActivity extends AppCompatActivity {
         if (sPref.contains("i"))
             i = sPref.getInt("i", 4);
         else i = 4;
+           {
+            Set<String> retin = sPref.getStringSet("strSetKey", new LinkedHashSet <String>());
+            String [] history_mass2 = new String[20];
+            for(String r : retin)
+            {
+                if(r!=null) {
+                    int nomeric = Integer.parseInt(r.substring(1, 3).trim());
+                    history_mass2[nomeric - 1] = r;
+                }
+            }
+            for (int j = 0; j < 20; j++) {
+                System.out.println(history_mass2[j]);
+            }
+        }
     }
 
     // сохранение выбора для дальнейшего открытия через него по умолчанию
@@ -58,6 +72,47 @@ public class MainActivity extends AppCompatActivity {
         ed.putInt("i", i);
         ed.commit();
     }
+    
+    
+    
+    
+      public void  savehistory(String what_it_is, String name_sing, String name_song)
+    {
+        int history_number=1;
+                String [] history_mass = new String[20];
+                Set<String> reti = sPref.getStringSet("strSetKey", new LinkedHashSet <String>());
+
+    for (String r : reti) {
+        if(r!=null) {
+            int nomer = Integer.parseInt(r.substring(1, 3).trim());
+            history_mass[nomer - 1] = r;
+        }
+    }
+
+if(history_mass.length!=0) {
+    for (int j = 0; j < 20; j++) {
+        if (history_mass[j] == null) {
+            history_number = j+1;
+            break;
+        }
+    }
+}
+                SharedPreferences.Editor ed = sPref.edit();
+            String stroka_in_history = " "+(history_number)+"   "+what_it_is+"  "+name_sing+"   "+name_song+"\n";
+           if(history_number>=19)
+           {
+               history_number=0;
+               }
+           history_mass[history_number]=stroka_in_history;
+        LinkedHashSet<String> historyset = new LinkedHashSet<String>(Arrays.asList(history_mass));
+
+        ed.putStringSet("strSetKey", historyset);
+        ed.apply();
+
+        history_number++;
+
+    }
+
 
     // установка выбора в соответствии с выбором, сохраненным в файле
     public void setButtonState() {
@@ -123,6 +178,9 @@ public class MainActivity extends AppCompatActivity {
             intent2.setAction(Intent.ACTION_SEND);
             intent2.setType("text/plain");
             intent2.putExtra(Intent.EXTRA_TEXT, newURL+" сгенерировано с помощью Simila");
+            
+              savehistory("Передача ссылки", Track[0],Track[1]);
+            
             startActivity(Intent.createChooser(intent2, "Share"));
             this.finish();
         }
@@ -176,6 +234,7 @@ public class MainActivity extends AppCompatActivity {
         else {
             // получить данные о треке
             makeArtist(url);
+               savehistory("Открытие по ссылке",Track[0],Track[1]);
             // выполнить новую ссылку
             useUrl();
         }
